@@ -1,0 +1,116 @@
+/****************************************************************************************/
+/*                          COPYRIGHT INFORMATION                                       */
+/*    This program contains proprietary information which is a trade                    */
+/*    secret of whaley Co., Ltd.and also is protected as an   unpublished               */
+/*    work under applicable Copyright laws. Recipient is to retain this                 */
+/*    program in confidence and is not permitted to use or make copies thereof          */
+/*    other than as permitted in a written agreement written agreement with             */
+/*    whaley Co., Ltd.                                                                  */
+/*                                                                                      */
+/*    All rights reserved. whaley Co., Ltd.                                             */
+/****************************************************************************************/
+/*
+ ****************************************************************************************
+ *
+ *               tee_test.h
+ *
+ * Filename      : tee_test.h
+ * Programmer(s) : system BSP
+ * Filename      : tee_test.h
+ * Author        : Shuai Fengyun
+ * Mail          : shuai.fengyun@whaley.cn
+ * Create Time   : 2017年07月13日 星期四 12时29分43秒
+ ****************************************************************************************
+ */
+
+#ifndef MOUDLE_TEST_SERVICE_H_
+#define MOUDLE_TEST_SERVICE_H_
+
+
+
+
+/*
+ *******************************************************************************
+ *                                INCLUDE FILES
+ *******************************************************************************
+*/
+#include <stdlib.h>
+#include <string.h>
+#include <string_ext.h>
+#include <utee_defines.h>
+#include <tee/tee_cryp_utl.h>
+#include <tee/tee_cryp_provider.h>
+#include <kernel/tee_time.h>
+#include <rng_support.h>
+#include <initcall.h>
+    
+#include <drivers/driver_test.h>
+
+
+
+
+
+/*
+ *******************************************************************************
+ *                  MACRO DEFINITION USED ONLY BY THIS MODULE
+ *******************************************************************************
+*/
+
+
+
+
+
+/*
+ *******************************************************************************
+ *                STRUCTRUE DEFINITION USED ONLY BY THIS MODULE
+ *******************************************************************************
+*/
+struct test_service_ops {
+    const char* name;
+    struct test_driver_ops_s test_driver;
+};
+
+
+
+#ifndef MOUDLE_TEST_SERVICE_C_
+
+
+/*
+ *******************************************************************************
+ *                      VARIABLES SUPPLIED BY THIS MODULE
+ *******************************************************************************
+*/
+
+
+
+
+
+/*
+ *******************************************************************************
+ *                      FUNCTIONS SUPPLIED BY THIS MODULE
+ *******************************************************************************
+*/
+extern TEE_Result syscall_testDriver_write(void *buf, size_t blen, size_t offset);
+extern TEE_Result syscall_testDriver_read(void *buf, size_t blen, size_t offset);
+extern TEE_Result syscall_testDriver_dump(void *buf, size_t blen);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#endif
+
+#endif  /* MOUDLE_NAME_H*/

@@ -1,0 +1,117 @@
+/****************************************************************************************/
+/*                          COPYRIGHT INFORMATION                                       */
+/*    This program contains proprietary information which is a trade                    */
+/*    secret of whaley Co., Ltd.and also is protected as an   unpublished               */
+/*    work under applicable Copyright laws. Recipient is to retain this                 */
+/*    program in confidence and is not permitted to use or make copies thereof          */
+/*    other than as permitted in a written agreement written agreement with             */
+/*    whaley Co., Ltd.                                                                  */
+/*                                                                                      */
+/*    All rights reserved. whaley Co., Ltd.                                             */
+/****************************************************************************************/
+/*
+ ****************************************************************************************
+ *
+ *               driver_test.h
+ *
+ * Filename      : driver_test.h
+ * Programmer(s) : system BSP
+ * Filename      : driver_test.h
+ * Author        : Shuai Fengyun
+ * Mail          : shuai.fengyun@whaley.cn
+ * Create Time   : 2017年07月13日 星期四 11时31分20秒
+ ****************************************************************************************
+ */
+
+#ifndef MOUDLE_TEST_DRIVER_H_
+#define MOUDLE_TEST_DRIVER_H_
+
+
+
+
+/*
+ *******************************************************************************
+ *                                INCLUDE FILES
+ *******************************************************************************
+*/
+#include <assert.h>
+        
+#include <mpalib.h>
+#include <stdlib.h>
+#include <string.h>
+#include <utee_defines.h>
+#include <trace.h>
+#include <tee_api_types.h>
+#include <string_ext.h>
+#include <util.h>
+#include <kernel/panic.h>
+
+
+
+
+
+/*
+ *******************************************************************************
+ *                  MACRO DEFINITION USED ONLY BY THIS MODULE
+ *******************************************************************************
+*/
+
+
+
+
+
+/*
+ *******************************************************************************
+ *                STRUCTRUE DEFINITION USED ONLY BY THIS MODULE
+ *******************************************************************************
+*/
+struct test_driver_ops_s {
+    TEE_Result (*device_init)(void);
+    TEE_Result (*write)(uint8_t *data, size_t len, size_t offset);
+    TEE_Result (*read)(uint8_t *dst, size_t len, size_t offset);
+    TEE_Result (*driver_dump)(uint8_t *data, size_t len);
+};
+
+
+#ifndef MOUDLE_TEST_DRIVER_C_
+
+
+/*
+ *******************************************************************************
+ *                      VARIABLES SUPPLIED BY THIS MODULE
+ *******************************************************************************
+*/
+
+
+
+
+
+/*
+ *******************************************************************************
+ *                      FUNCTIONS SUPPLIED BY THIS MODULE
+ *******************************************************************************
+*/
+extern TEE_Result device_init(void);
+extern TEE_Result write(uint8_t *data, size_t len, size_t offset);
+extern TEE_Result read(uint8_t *dst, size_t len, size_t offset);
+extern TEE_Result driver_dump(uint8_t *data, size_t len);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#endif
+
+#endif  /* MOUDLE_NAME_H*/
