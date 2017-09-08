@@ -1,15 +1,4 @@
 
-/****************************************************************************************/
-/*                          COPYRIGHT INFORMATION                                       */
-/*    This program contains proprietary information which is a trade                    */
-/*    secret of whaley Co., Ltd.and also is protected as an   unpublished               */
-/*    work under applicable Copyright laws. Recipient is to retain this                 */
-/*    program in confidence and is not permitted to use or make copies thereof          */
-/*    other than as permitted in a written agreement written agreement with             */
-/*    whaley Co., Ltd.                                                                  */
-/*                                                                                      */
-/*    All rights reserved. shuaifengyun@126.com                                         */
-/****************************************************************************************/
 /*
  ****************************************************************************************
  *
