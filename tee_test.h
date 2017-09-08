@@ -7,7 +7,7 @@
  * Programmer(s) : system BSP
  * Filename      : tee_test.h
  * Author        : Shuai Fengyun
- * Mail          : shuai.fengyun@whaley.cn
+ * Mail          : shuaifengyun@126.com
  * Create Time   : 2017年07月13日 星期四 12时29分43秒
  ****************************************************************************************
  */
