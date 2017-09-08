@@ -7,7 +7,7 @@
  * Programmer(s) : system BSP
  * Filename      : driver_test.h
  * Author        : Shuai Fengyun
- * Mail          : shuai.fengyun@whaley.cn
+ * Mail          : shuaifengyun@126.com
  * Create Time   : 2017年07月13日 星期四 11时31分20秒
  ****************************************************************************************
  */
