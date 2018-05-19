@@ -29,7 +29,6 @@
 #include <string_ext.h>
 #include <utee_defines.h>
 #include <tee/tee_cryp_utl.h>
-#include <tee/tee_cryp_provider.h>
 #include <kernel/tee_time.h>
 #include <rng_support.h>
 #include <initcall.h>
