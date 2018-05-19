@@ -1,0 +1,694 @@
+From 4e5368e5aa90be46634e123f416b41b0578b2e66 Mon Sep 17 00:00:00 2001
+From: Fengyu Shuai <fshuai@qti.qualcomm.com>
+Date: Sat, 19 May 2018 13:16:49 +0800
+Subject: [PATCH] Integrate secure driver test into op-tee
+
+---
+ core/arch/arm/tee/arch_svc.c              |   4 +
+ core/drivers/driver_test.c                | 158 ++++++++++++++++++++++++++
+ core/drivers/sub.mk                       |   1 +
+ core/include/drivers/driver_test.h        | 106 +++++++++++++++++
+ core/include/tee/tee_test.h               | 104 +++++++++++++++++
+ core/tee/sub.mk                           |   1 +
+ core/tee/tee_test.c                       | 182 ++++++++++++++++++++++++++++++
+ lib/libutee/arch/arm/utee_syscalls_asm.S  |   4 +
+ lib/libutee/include/tee_syscall_numbers.h |   5 +-
+ lib/libutee/include/utee_syscalls.h       |   5 +
+ mk/config.mk                              |   2 +
+ 11 files changed, 571 insertions(+), 1 deletion(-)
+ create mode 100755 core/drivers/driver_test.c
+ create mode 100755 core/include/drivers/driver_test.h
+ create mode 100755 core/include/tee/tee_test.h
+ create mode 100755 core/tee/tee_test.c
+
+diff --git a/core/arch/arm/tee/arch_svc.c b/core/arch/arm/tee/arch_svc.c
+index eb142ec..b451188 100644
+--- a/core/arch/arm/tee/arch_svc.c
++++ b/core/arch/arm/tee/arch_svc.c
+@@ -15,6 +15,7 @@
+ #include <mm/tee_mmu.h>
+ #include <string.h>
+ #include <tee/tee_svc.h>
++#include <tee/tee_test.h>
+ #include <tee/arch_svc.h>
+ #include <tee/tee_svc_cryp.h>
+ #include <tee/tee_svc_storage.h>
+@@ -118,6 +119,9 @@ static const struct syscall_entry tee_svc_syscall_table[] = {
+ 	SYSCALL_ENTRY(syscall_se_channel_transmit),
+ 	SYSCALL_ENTRY(syscall_se_channel_close),
+ 	SYSCALL_ENTRY(syscall_cache_operation),
++    SYSCALL_ENTRY(syscall_testDriver_write),
++    SYSCALL_ENTRY(syscall_testDriver_read),
++    SYSCALL_ENTRY(syscall_testDriver_dump),
+ };
+ 
+ #ifdef TRACE_SYSCALLS
+diff --git a/core/drivers/driver_test.c b/core/drivers/driver_test.c
+new file mode 100755
+index 0000000..f7e18e6
+--- /dev/null
++++ b/core/drivers/driver_test.c
+@@ -0,0 +1,158 @@
++/*
++ ****************************************************************************************
++ *
++ *               driver_test.c
++ *
++ * Filename      : driver_test.c
++ * Programmer(s) : system BSP
++ * Filename      : driver_test.c
++ * Author        : Shuai Fengyun
++ * Mail          : shuaifengyun@126.com
++ * Create Time   : 2017年07月13日 星期四 11时30分24秒
++ ****************************************************************************************
++ */
++
++#define MOUDLE_TEST_DRIVER_C_
++
++/** @defgroup MODULE_NAME_INFOR
++* @{
++*/
++
++/*
++ *******************************************************************************
++ *                                INCLUDE FILES
++ *******************************************************************************
++*/
++#include <assert.h>
++    
++#include <mpalib.h>
++#include <stdlib.h>
++#include <string.h>
++#include <utee_defines.h>
++#include <trace.h>
++#include <tee_api_types.h>
++#include <string_ext.h>
++#include <util.h>
++#include <kernel/panic.h>
++#include <tee/tee_svc.h>
++#include <trace.h>
++
++
++
++
++
++/*
++ *******************************************************************************
++ *                         FUNCTIONS SUPPLIED BY THIS MODULE
++ *******************************************************************************
++*/
++TEE_Result device_init(void);
++TEE_Result write(uint8_t *data, size_t len, size_t offset);
++TEE_Result read(uint8_t *dst, size_t len, size_t offset);
++TEE_Result driver_dump(uint8_t *data, size_t len);
++
++
++
++
++
++
++/*
++ *******************************************************************************
++ *                          VARIABLES SUPPLIED BY THIS MODULE
++ *******************************************************************************
++*/
++
++
++
++
++
++/*
++ *******************************************************************************
++ *                          FUNCTIONS USED ONLY BY THIS MODULE
++ *******************************************************************************
++*/
++
++
++
++
++
++/*
++ *******************************************************************************
++ *                          VARIABLES USED ONLY BY THIS MODULE
++ *******************************************************************************
++*/
++
++uint8_t g_buffer[128] = {0};
++
++
++
++
++/*
++ *******************************************************************************
++ *                               FUNCTIONS IMPLEMENT
++ *******************************************************************************
++*/
++/** @ingroup MOUDLE_NAME_C_
++ *- #Description  This function for handle command.
++ * @param   pMsg           [IN] The received request message
++ *                               - Type: MBX_Msg *
++ *                               - Range: N/A.
++ *
++ * @return     void
++ * @retval     void
++ *
++ *
++ */
++
++TEE_Result device_init(void)
++{
++    DMSG("Device init: Clear Buffer\n");
++    memset(g_buffer, 0, 128);
++    return TEE_SUCCESS;
++}
++
++TEE_Result write(uint8_t *data, size_t len, size_t offset)
++{
++    DMSG("Start to write\n");
++    memcpy(&(g_buffer[offset]), data, len);
++    DHEXDUMP(&(g_buffer[offset]), len);
++    return TEE_SUCCESS;
++}
++
++TEE_Result read(uint8_t *dst, size_t len, size_t offset)
++{
++    DMSG("Start to read\n");
++    memcpy(dst, &(g_buffer[offset]), len);
++    DHEXDUMP(&(g_buffer[offset]), len);
++    return TEE_SUCCESS;
++}
++
++TEE_Result driver_dump(uint8_t *data, size_t len)
++{
++    DMSG("Start to dump\n");
++    memcpy(data,&(g_buffer[0]), len);
++    DHEXDUMP(&(g_buffer[0]), len);
++    return TEE_SUCCESS;
++}
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++/**
++ * @}
++ */
+diff --git a/core/drivers/sub.mk b/core/drivers/sub.mk
+index aa6973f..ef9830a 100644
+--- a/core/drivers/sub.mk
++++ b/core/drivers/sub.mk
+@@ -19,3 +19,4 @@ srcs-$(CFG_DRA7_RNG) += dra7_rng.c
+ srcs-$(CFG_STIH_UART) += stih_asc.c
+ srcs-$(CFG_ATMEL_UART) += atmel_uart.c
+ srcs-$(CFG_MVEBU_UART) += mvebu_uart.c
++srcs-$(CFG_TEST_DRIVER) += driver_test.c
+diff --git a/core/include/drivers/driver_test.h b/core/include/drivers/driver_test.h
+new file mode 100755
+index 0000000..fcd4205
+--- /dev/null
++++ b/core/include/drivers/driver_test.h
+@@ -0,0 +1,106 @@
++/*
++ ****************************************************************************************
++ *
++ *               driver_test.h
++ *
++ * Filename      : driver_test.h
++ * Programmer(s) : system BSP
++ * Filename      : driver_test.h
++ * Author        : Shuai Fengyun
++ * Mail          : shuaifengyun@126.com
++ * Create Time   : 2017年07月13日 星期四 11时31分20秒
++ ****************************************************************************************
++ */
++
++#ifndef MOUDLE_TEST_DRIVER_H_
++#define MOUDLE_TEST_DRIVER_H_
++
++
++
++
++/*
++ *******************************************************************************
++ *                                INCLUDE FILES
++ *******************************************************************************
++*/
++#include <assert.h>
++        
++#include <mpalib.h>
++#include <stdlib.h>
++#include <string.h>
++#include <utee_defines.h>
++#include <trace.h>
++#include <tee_api_types.h>
++#include <string_ext.h>
++#include <util.h>
++#include <kernel/panic.h>
++
++
++
++
++
++/*
++ *******************************************************************************
++ *                  MACRO DEFINITION USED ONLY BY THIS MODULE
++ *******************************************************************************
++*/
++
++
++
++
++
++/*
++ *******************************************************************************
++ *                STRUCTRUE DEFINITION USED ONLY BY THIS MODULE
++ *******************************************************************************
++*/
++struct test_driver_ops_s {
++    TEE_Result (*device_init)(void);
++    TEE_Result (*write)(uint8_t *data, size_t len, size_t offset);
++    TEE_Result (*read)(uint8_t *dst, size_t len, size_t offset);
++    TEE_Result (*driver_dump)(uint8_t *data, size_t len);
++};
++
++
++#ifndef MOUDLE_TEST_DRIVER_C_
++
++
++/*
++ *******************************************************************************
++ *                      VARIABLES SUPPLIED BY THIS MODULE
++ *******************************************************************************
++*/
++
++
++
++
++
++/*
++ *******************************************************************************
++ *                      FUNCTIONS SUPPLIED BY THIS MODULE
++ *******************************************************************************
++*/
++extern TEE_Result device_init(void);
++extern TEE_Result write(uint8_t *data, size_t len, size_t offset);
++extern TEE_Result read(uint8_t *dst, size_t len, size_t offset);
++extern TEE_Result driver_dump(uint8_t *data, size_t len);
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++#endif
++
++#endif  /* MOUDLE_NAME_H*/
+diff --git a/core/include/tee/tee_test.h b/core/include/tee/tee_test.h
+new file mode 100755
+index 0000000..cd1a61d
+--- /dev/null
++++ b/core/include/tee/tee_test.h
+@@ -0,0 +1,104 @@
++/*
++ ****************************************************************************************
++ *
++ *               tee_test.h
++ *
++ * Filename      : tee_test.h
++ * Programmer(s) : system BSP
++ * Filename      : tee_test.h
++ * Author        : Shuai Fengyun
++ * Mail          : shuaifengyun@126.com
++ * Create Time   : 2017年07月13日 星期四 12时29分43秒
++ ****************************************************************************************
++ */
++
++#ifndef MOUDLE_TEST_SERVICE_H_
++#define MOUDLE_TEST_SERVICE_H_
++
++
++
++
++/*
++ *******************************************************************************
++ *                                INCLUDE FILES
++ *******************************************************************************
++*/
++#include <stdlib.h>
++#include <string.h>
++#include <string_ext.h>
++#include <utee_defines.h>
++#include <tee/tee_cryp_utl.h>
++#include <kernel/tee_time.h>
++#include <rng_support.h>
++#include <initcall.h>
++    
++#include <drivers/driver_test.h>
++
++
++
++
++
++/*
++ *******************************************************************************
++ *                  MACRO DEFINITION USED ONLY BY THIS MODULE
++ *******************************************************************************
++*/
++
++
++
++
++
++/*
++ *******************************************************************************
++ *                STRUCTRUE DEFINITION USED ONLY BY THIS MODULE
++ *******************************************************************************
++*/
++struct test_service_ops {
++    const char* name;
++    struct test_driver_ops_s test_driver;
++};
++
++
++
++#ifndef MOUDLE_TEST_SERVICE_C_
++
++
++/*
++ *******************************************************************************
++ *                      VARIABLES SUPPLIED BY THIS MODULE
++ *******************************************************************************
++*/
++
++
++
++
++
++/*
++ *******************************************************************************
++ *                      FUNCTIONS SUPPLIED BY THIS MODULE
++ *******************************************************************************
++*/
++extern TEE_Result syscall_testDriver_write(void *buf, size_t blen, size_t offset);
++extern TEE_Result syscall_testDriver_read(void *buf, size_t blen, size_t offset);
++extern TEE_Result syscall_testDriver_dump(void *buf, size_t blen);
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++#endif
++
++#endif  /* MOUDLE_NAME_H*/
+diff --git a/core/tee/sub.mk b/core/tee/sub.mk
+index eef6081..201419d 100644
+--- a/core/tee/sub.mk
++++ b/core/tee/sub.mk
+@@ -46,5 +46,6 @@ endif #CFG_WITH_USER_TA,y
+ 
+ srcs-y += uuid.c
+ 
++srcs-y += tee_test.c
+ subdirs-$(CFG_SE_API) += se
+ 
+diff --git a/core/tee/tee_test.c b/core/tee/tee_test.c
+new file mode 100755
+index 0000000..d23a3e9
+--- /dev/null
++++ b/core/tee/tee_test.c
+@@ -0,0 +1,182 @@
++
++/*
++ ****************************************************************************************
++ *
++ *               tee_test.c
++ *
++ * Filename      : tee_test.c
++ * Programmer(s) : system BSP
++ * Filename      : tee_test.c
++ * Author        : Shuai Fengyun
++ * Mail          : shuaifengyun@126.com
++ * Create Time   : 2017年07月13日 星期四 11时32分23秒
++ ****************************************************************************************
++ */
++
++#define MOUDLE_TEST_SERVICE_C_
++
++/** @defgroup MODULE_NAME_INFOR
++* @{
++*/
++
++/*
++ *******************************************************************************
++ *                                INCLUDE FILES
++ *******************************************************************************
++*/
++#include <stdlib.h>
++#include <string.h>
++#include <string_ext.h>
++#include <utee_defines.h>
++#include <tee/tee_cryp_utl.h>
++#include <kernel/tee_time.h>
++#include <rng_support.h>
++#include <initcall.h>
++
++#include <drivers/driver_test.h>
++#include <tee/tee_test.h>
++#include <tee/tee_svc.h>
++#include <trace.h>
++
++
++/*
++ *******************************************************************************
++ *                         FUNCTIONS SUPPLIED BY THIS MODULE
++ *******************************************************************************
++*/
++TEE_Result syscall_testDriver_write(void *buf, size_t blen, size_t offset);
++TEE_Result syscall_testDriver_read(void *buf, size_t blen, size_t offset);
++TEE_Result syscall_testDriver_dump(void *buf, size_t blen);
++
++
++
++
++
++
++/*
++ *******************************************************************************
++ *                          VARIABLES SUPPLIED BY THIS MODULE
++ *******************************************************************************
++*/
++struct test_service_ops tes_ops = {
++    .name = "TestDriver",
++	.test_driver = {
++        .device_init = device_init,
++        .write = write,
++        .read = read,
++        .driver_dump = driver_dump,
++	},
++};
++
++
++
++
++
++/*
++ *******************************************************************************
++ *                          FUNCTIONS USED ONLY BY THIS MODULE
++ *******************************************************************************
++*/
++
++
++
++
++
++/*
++ *******************************************************************************
++ *                          VARIABLES USED ONLY BY THIS MODULE
++ *******************************************************************************
++*/
++
++
++
++
++
++/*
++ *******************************************************************************
++ *                               FUNCTIONS IMPLEMENT
++ *******************************************************************************
++*/
++/** @ingroup MOUDLE_NAME_C_
++ *- #Description  This function for handle command.
++ * @param   pMsg           [IN] The received request message
++ *                               - Type: MBX_Msg *
++ *                               - Range: N/A.
++ *
++ * @return     void
++ * @retval     void
++ *
++ *
++ */
++
++
++
++
++
++
++TEE_Result syscall_testDriver_write(void *buf, size_t blen, size_t offset)
++{
++    uint8_t* src = NULL;
++
++    src = malloc(blen);
++
++    tee_svc_copy_from_user(src, buf, blen);
++    tes_ops.test_driver.write(src, blen, offset);
++    free(src);
++
++   
++    return TEE_SUCCESS;
++}
++
++
++
++
++TEE_Result syscall_testDriver_read(void *buf, size_t blen, size_t offset)
++{
++    uint8_t* dst = NULL;
++    dst = malloc(blen);
++    tes_ops.test_driver.read(dst, blen, offset);
++    tee_svc_copy_to_user(buf, dst, blen);
++
++    free(dst);
++    return TEE_SUCCESS;
++
++}
++
++
++
++TEE_Result syscall_testDriver_dump(void *buf, size_t blen)
++{
++    uint8_t* dst = NULL;
++    dst = malloc(blen);
++    tes_ops.test_driver.driver_dump(dst, blen);
++    tee_svc_copy_to_user(buf, dst, blen);
++
++    free(dst);
++    return TEE_SUCCESS;
++}
++
++
++
++
++
++static TEE_Result tee_test_init(void)
++{
++    DMSG("Strat to start test servie\n");
++	if (tes_ops.test_driver.device_init)
++		tes_ops.test_driver.device_init();
++    DMSG("Init servcie is ok\n");
++	return TEE_SUCCESS;
++}
++
++
++
++
++
++
++service_init(tee_test_init);
++
++
++/**
++ * @}
++ */
+diff --git a/lib/libutee/arch/arm/utee_syscalls_asm.S b/lib/libutee/arch/arm/utee_syscalls_asm.S
+index 32d56af..985df73 100644
+--- a/lib/libutee/arch/arm/utee_syscalls_asm.S
++++ b/lib/libutee/arch/arm/utee_syscalls_asm.S
+@@ -188,3 +188,7 @@
+                 TEE_SCN_SE_CHANNEL_CLOSE, 1
+ 
+         UTEE_SYSCALL utee_cache_operation, TEE_SCN_CACHE_OPERATION, 3
++
++        UTEE_SYSCALL utee_testDriver_write, TEE_SCN_TESTDRIVER_WRITE, 3
++        UTEE_SYSCALL utee_testDriver_read, TEE_SCN_TESTDRIVER_READ, 3
++        UTEE_SYSCALL utee_testDriver_dump, TEE_SCN_TESTDRIVER_DUMP, 2
+diff --git a/lib/libutee/include/tee_syscall_numbers.h b/lib/libutee/include/tee_syscall_numbers.h
+index 91fcf44..1ce71c9 100644
+--- a/lib/libutee/include/tee_syscall_numbers.h
++++ b/lib/libutee/include/tee_syscall_numbers.h
+@@ -101,7 +101,10 @@
+ #define TEE_SCN_SE_CHANNEL_CLOSE		69
+ #define TEE_SCN_CACHE_OPERATION			70
+ 
+-#define TEE_SCN_MAX				70
++#define TEE_SCN_TESTDRIVER_WRITE			71
++#define TEE_SCN_TESTDRIVER_READ			72
++#define TEE_SCN_TESTDRIVER_DUMP			73
++#define TEE_SCN_MAX				73
+ 
+ /* Maximum number of allowed arguments for a syscall */
+ #define TEE_SVC_MAX_ARGS			8
+diff --git a/lib/libutee/include/utee_syscalls.h b/lib/libutee/include/utee_syscalls.h
+index 1232829..f05742c 100644
+--- a/lib/libutee/include/utee_syscalls.h
++++ b/lib/libutee/include/utee_syscalls.h
+@@ -301,4 +301,9 @@ TEE_Result utee_cache_operation(void *va, size_t l, unsigned long op);
+ 
+ TEE_Result utee_gprof_send(void *buf, size_t size, uint32_t *id);
+ 
++TEE_Result utee_testDriver_write(void *buf, size_t blen, size_t offset);
++TEE_Result utee_testDriver_read(void *buf, size_t blen, size_t offset);
++TEE_Result utee_testDriver_dump(void *buf, size_t blen);
++
++
+ #endif /* UTEE_SYSCALLS_H */
+diff --git a/mk/config.mk b/mk/config.mk
+index 1ffa20d..0e6118a 100644
+--- a/mk/config.mk
++++ b/mk/config.mk
+@@ -295,3 +295,5 @@ CFG_DYN_SHM_CAP ?= y
+ # Enables support for larger physical addresses, that is, it will define
+ # paddr_t as a 64-bit type.
+ CFG_CORE_LARGE_PHYS_ADDR ?= n
++
++CFG_TEST_DRIVER ?= y
+-- 
+2.7.4
+
