@@ -1,6 +1,6 @@
-From 4e5368e5aa90be46634e123f416b41b0578b2e66 Mon Sep 17 00:00:00 2001
-From: Fengyu Shuai <fshuai@qti.qualcomm.com>
-Date: Sat, 19 May 2018 13:16:49 +0800
+From 1a6a197b700aa279e7a435dde09d0ddcdf726f29 Mon Sep 17 00:00:00 2001
+From: shuaifengyun <shuai1359318>
+Date: Sun, 28 Oct 2018 17:53:23 +0800
 Subject: [PATCH] Integrate secure driver test into op-tee
 
 ---
@@ -9,31 +9,31 @@ Subject: [PATCH] Integrate secure driver test into op-tee
  core/drivers/sub.mk                       |   1 +
  core/include/drivers/driver_test.h        | 106 +++++++++++++++++
  core/include/tee/tee_test.h               | 104 +++++++++++++++++
- core/tee/sub.mk                           |   1 +
+ core/tee/sub.mk                           |   2 +
  core/tee/tee_test.c                       | 182 ++++++++++++++++++++++++++++++
  lib/libutee/arch/arm/utee_syscalls_asm.S  |   4 +
  lib/libutee/include/tee_syscall_numbers.h |   5 +-
- lib/libutee/include/utee_syscalls.h       |   5 +
- mk/config.mk                              |   2 +
- 11 files changed, 571 insertions(+), 1 deletion(-)
+ lib/libutee/include/utee_syscalls.h       |   4 +
+ mk/config.mk                              |   3 +
+ 11 files changed, 572 insertions(+), 1 deletion(-)
  create mode 100755 core/drivers/driver_test.c
  create mode 100755 core/include/drivers/driver_test.h
  create mode 100755 core/include/tee/tee_test.h
  create mode 100755 core/tee/tee_test.c
 
 diff --git a/core/arch/arm/tee/arch_svc.c b/core/arch/arm/tee/arch_svc.c
-index eb142ec..b451188 100644
+index 60bb7b6..cab54df 100644
 --- a/core/arch/arm/tee/arch_svc.c
 +++ b/core/arch/arm/tee/arch_svc.c
-@@ -15,6 +15,7 @@
- #include <mm/tee_mmu.h>
+@@ -38,6 +38,7 @@
  #include <string.h>
  #include <tee/tee_svc.h>
-+#include <tee/tee_test.h>
  #include <tee/arch_svc.h>
++#include <tee/tee_test.h>
  #include <tee/tee_svc_cryp.h>
  #include <tee/tee_svc_storage.h>
-@@ -118,6 +119,9 @@ static const struct syscall_entry tee_svc_syscall_table[] = {
+ #include <tee/se/svc.h>
+@@ -140,6 +141,9 @@ static const struct syscall_entry tee_svc_syscall_table[] = {
  	SYSCALL_ENTRY(syscall_se_channel_transmit),
  	SYSCALL_ENTRY(syscall_se_channel_close),
  	SYSCALL_ENTRY(syscall_cache_operation),
@@ -208,13 +208,13 @@ index 0000000..f7e18e6
 + * @}
 + */
 diff --git a/core/drivers/sub.mk b/core/drivers/sub.mk
-index aa6973f..ef9830a 100644
+index 6012e5d..6808da6 100644
 --- a/core/drivers/sub.mk
 +++ b/core/drivers/sub.mk
-@@ -19,3 +19,4 @@ srcs-$(CFG_DRA7_RNG) += dra7_rng.c
+@@ -19,3 +19,4 @@ srcs-$(CFG_SCIF) += scif.c
+ srcs-$(CFG_DRA7_RNG) += dra7_rng.c
  srcs-$(CFG_STIH_UART) += stih_asc.c
  srcs-$(CFG_ATMEL_UART) += atmel_uart.c
- srcs-$(CFG_MVEBU_UART) += mvebu_uart.c
 +srcs-$(CFG_TEST_DRIVER) += driver_test.c
 diff --git a/core/include/drivers/driver_test.h b/core/include/drivers/driver_test.h
 new file mode 100755
@@ -439,14 +439,15 @@ index 0000000..cd1a61d
 +
 +#endif  /* MOUDLE_NAME_H*/
 diff --git a/core/tee/sub.mk b/core/tee/sub.mk
-index eef6081..201419d 100644
+index deae77e..4a6f7f8 100644
 --- a/core/tee/sub.mk
 +++ b/core/tee/sub.mk
-@@ -46,5 +46,6 @@ endif #CFG_WITH_USER_TA,y
+@@ -44,5 +44,7 @@ endif #CFG_WITH_USER_TA,y
  
  srcs-y += uuid.c
  
 +srcs-y += tee_test.c
++
  subdirs-$(CFG_SE_API) += se
  
 diff --git a/core/tee/tee_test.c b/core/tee/tee_test.c
@@ -638,38 +639,38 @@ index 0000000..d23a3e9
 + * @}
 + */
 diff --git a/lib/libutee/arch/arm/utee_syscalls_asm.S b/lib/libutee/arch/arm/utee_syscalls_asm.S
-index 32d56af..985df73 100644
+index 8d525dc..feb3d9d 100644
 --- a/lib/libutee/arch/arm/utee_syscalls_asm.S
 +++ b/lib/libutee/arch/arm/utee_syscalls_asm.S
-@@ -188,3 +188,7 @@
+@@ -187,3 +187,7 @@
                  TEE_SCN_SE_CHANNEL_CLOSE, 1
  
          UTEE_SYSCALL utee_cache_operation, TEE_SCN_CACHE_OPERATION, 3
-+
 +        UTEE_SYSCALL utee_testDriver_write, TEE_SCN_TESTDRIVER_WRITE, 3
 +        UTEE_SYSCALL utee_testDriver_read, TEE_SCN_TESTDRIVER_READ, 3
 +        UTEE_SYSCALL utee_testDriver_dump, TEE_SCN_TESTDRIVER_DUMP, 2
++
 diff --git a/lib/libutee/include/tee_syscall_numbers.h b/lib/libutee/include/tee_syscall_numbers.h
-index 91fcf44..1ce71c9 100644
+index 2c1d443..3915019 100644
 --- a/lib/libutee/include/tee_syscall_numbers.h
 +++ b/lib/libutee/include/tee_syscall_numbers.h
-@@ -101,7 +101,10 @@
+@@ -100,7 +100,10 @@
  #define TEE_SCN_SE_CHANNEL_CLOSE		69
  #define TEE_SCN_CACHE_OPERATION			70
  
 -#define TEE_SCN_MAX				70
-+#define TEE_SCN_TESTDRIVER_WRITE			71
-+#define TEE_SCN_TESTDRIVER_READ			72
-+#define TEE_SCN_TESTDRIVER_DUMP			73
-+#define TEE_SCN_MAX				73
++#define TEE_SCN_TESTDRIVER_WRITE           71
++#define TEE_SCN_TESTDRIVER_READ            72
++#define TEE_SCN_TESTDRIVER_DUMP            73
++#define TEE_SCN_MAX                73
  
  /* Maximum number of allowed arguments for a syscall */
  #define TEE_SVC_MAX_ARGS			8
 diff --git a/lib/libutee/include/utee_syscalls.h b/lib/libutee/include/utee_syscalls.h
-index 1232829..f05742c 100644
+index ed518a0..c3d6acb 100644
 --- a/lib/libutee/include/utee_syscalls.h
 +++ b/lib/libutee/include/utee_syscalls.h
-@@ -301,4 +301,9 @@ TEE_Result utee_cache_operation(void *va, size_t l, unsigned long op);
+@@ -300,4 +300,8 @@ TEE_Result utee_cache_operation(void *va, size_t l, unsigned long op);
  
  TEE_Result utee_gprof_send(void *buf, size_t size, uint32_t *id);
  
@@ -677,16 +678,16 @@ index 1232829..f05742c 100644
 +TEE_Result utee_testDriver_read(void *buf, size_t blen, size_t offset);
 +TEE_Result utee_testDriver_dump(void *buf, size_t blen);
 +
-+
  #endif /* UTEE_SYSCALLS_H */
 diff --git a/mk/config.mk b/mk/config.mk
-index 1ffa20d..0e6118a 100644
+index 3d66d93..91bc64d 100644
 --- a/mk/config.mk
 +++ b/mk/config.mk
-@@ -295,3 +295,5 @@ CFG_DYN_SHM_CAP ?= y
+@@ -278,3 +278,6 @@ CFG_DYN_SHM_CAP ?= y
  # Enables support for larger physical addresses, that is, it will define
  # paddr_t as a 64-bit type.
  CFG_CORE_LARGE_PHYS_ADDR ?= n
++
 +
 +CFG_TEST_DRIVER ?= y
 -- 
