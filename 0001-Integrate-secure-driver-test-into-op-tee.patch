@@ -1,5 +1,5 @@
 From 1a6a197b700aa279e7a435dde09d0ddcdf726f29 Mon Sep 17 00:00:00 2001
-From: shuaifengyun <shuai1359318>
+From: shuaifengyun <shuaifengyun>
 Date: Sun, 28 Oct 2018 17:53:23 +0800
 Subject: [PATCH] Integrate secure driver test into op-tee
 
